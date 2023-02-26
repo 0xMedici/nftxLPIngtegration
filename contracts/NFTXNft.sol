@@ -7,7 +7,6 @@ import { NFTXVaultUpgradeable } from "./solidity/NFTXVaultUpgradeable.sol";
 import { NFTXVaultFactoryUpgradeable } from "./solidity/NFTXVaultFactoryUpgradeable.sol";
 import { StakingTokenProvider } from "./solidity/StakingTokenProvider.sol";
 
-
 import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import { IERC721 } from "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import { ERC20Upgradeable } from "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -27,7 +26,7 @@ contract NFTXNft is ERC721 {
     address public WETH = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2;
 
     uint256 public maxLPTokens;
-
+    
     constructor(
         address _collection,
         address _inventoryStaking,
@@ -51,19 +50,17 @@ contract NFTXNft is ERC721 {
     }
 
     function depositVToken(
-        uint256 _vaultId,
         uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
-        address vault = address(iStaking.vaultXToken(_vaultId));
+        address vault = address(vToken);
         address NFT = NFTXVaultUpgradeable(vault).assetAddress();
-        ERC20Upgradeable baseToken = ERC20Upgradeable(factory.vault(_vaultId));
         require(
             NFT == address(collection)
             , "Collections don't match"
         );
         require(
-            baseToken.balanceOf(msg.sender) >= _amount
+            vToken.balanceOf(msg.sender) >= _amount
             , "Insufficient balance"
         );
         require(
@@ -71,9 +68,13 @@ contract NFTXNft is ERC721 {
             , "Not enough tokens"
         );
         for(uint256 i = 0; i < _lpTokenIds.length; i++) {
+            require(
+                !_exists(_lpTokenIds[i])
+                , "ID already exists"
+            );
             _mint(msg.sender, _lpTokenIds[i]);
         }
-        baseToken.transferFrom(msg.sender, address(this), _amount);
+        vToken.transferFrom(msg.sender, address(this), _amount);
     }
 
     function redeemVToken(
@@ -87,19 +88,17 @@ contract NFTXNft is ERC721 {
             );
             _burn(_lpTokenIds[i]);
         }
-        vToken.transferFrom(
-            address(this),
+        vToken.transfer(
             msg.sender,
             _lpTokenIds.length * 1e18
         );
     }
 
     function depositXToken(
-        uint256 _vaultId,
         uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
-        address vault = address(iStaking.vaultXToken(_vaultId));
+        address vault = address(vToken);
         address NFT = NFTXVaultUpgradeable(vault).assetAddress();
         uint256 vTokenAmount = 
             _amount * vToken.balanceOf(address(xToken)) / xToken.totalSupply(); 
@@ -117,16 +116,13 @@ contract NFTXNft is ERC721 {
             , "Not enough tokens"
         );
         for(uint256 i = 0; i < length; i++) {
+            require(
+                !_exists(_lpTokenIds[i])
+                , "ID already exists"
+            );
             _mint(msg.sender, _lpTokenIds[i]);
         }
         xToken.transferFrom(msg.sender, address(this), _amount);
-        if(vTokenAmount % 1e18 != 0) {
-            xToken.transferFrom(
-                address(this), 
-                msg.sender, 
-                (vTokenAmount % 1e18) * xToken.totalSupply() / vToken.balanceOf(address(xToken))
-            );
-        }
     }
 
     function redeemXToken(
@@ -140,14 +136,13 @@ contract NFTXNft is ERC721 {
             );
             _burn(_lpTokenIds[i]);
         }
-        xToken.transferFrom(
-            address(this),
+        xToken.transfer(
             msg.sender,
-            _lpTokenIds.length * xToken.totalSupply() / vToken.balanceOf(address(xToken))
+            (_lpTokenIds.length * 1e18) * xToken.totalSupply() / vToken.balanceOf(address(xToken))
         );
     }
 
-    function depositSLPToken(
+    function depositSLP(
         uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
@@ -158,23 +153,20 @@ contract NFTXNft is ERC721 {
             pair = provider.pairForVaultToken(address(vToken), WETH);    
         }
         uint256 slpSupply = SLP.totalSupply();
-        uint256 pairBalance = vToken.balanceOf(pair);
+        uint256 pairBalance = vToken.balanceOf(address(SLP));
         uint256 vTokenAmount = _amount * pairBalance / slpSupply;
         require(
             vTokenAmount >= _lpTokenIds.length
             , "Underpaying for the amount of LP tokens you're trying to mint"
         );
         for(uint256 i = 0; i < _lpTokenIds.length; i++) {
+            require(
+                !_exists(_lpTokenIds[i])
+                , "ID already exists"
+            );
             _mint(msg.sender, _lpTokenIds[i]);
         }
         SLP.transferFrom(msg.sender, address(this), _amount);
-        if(vTokenAmount % 1e18 != 0) {
-            SLP.transferFrom(
-                address(this), 
-                msg.sender, 
-                (vTokenAmount % 1e18) * slpSupply / pairBalance
-            );
-        }
     }
 
     function redeemSLP(
@@ -188,7 +180,7 @@ contract NFTXNft is ERC721 {
             pair = provider.pairForVaultToken(address(vToken), WETH);    
         }
         uint256 slpSupply = SLP.totalSupply();
-        uint256 pairBalance = vToken.balanceOf(pair);
+        uint256 pairBalance = vToken.balanceOf(address(SLP));
         for(uint256 i = 0; i < length; i++) {
             require(
                 ownerOf(_lpTokenIds[i]) == msg.sender
@@ -196,14 +188,13 @@ contract NFTXNft is ERC721 {
             );
             _burn(_lpTokenIds[i]);
         }
-        SLP.transferFrom(
-            address(this),
+        SLP.transfer(
             msg.sender,
-            _lpTokenIds.length * slpSupply / pairBalance
+            (_lpTokenIds.length * 1e18) * slpSupply / pairBalance
         );
     }
 
-    function depositXSLPToken(
+    function depositXSLP(
         uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
@@ -214,26 +205,23 @@ contract NFTXNft is ERC721 {
             pair = provider.pairForVaultToken(address(vToken), WETH);    
         }
         uint256 slpSupply = SLP.totalSupply();
-        uint256 pairBalance = vToken.balanceOf(pair);
+        uint256 pairBalance = vToken.balanceOf(address(SLP));
         uint256 vTokenAmount = _amount * pairBalance / slpSupply;
         require(
             vTokenAmount >= _lpTokenIds.length
             , "Underpaying for the amount of LP tokens you're trying to mint"
         );
         for(uint256 i = 0; i < _lpTokenIds.length; i++) {
+            require(
+                !_exists(_lpTokenIds[i])
+                , "ID already exists"
+            );
             _mint(msg.sender, _lpTokenIds[i]);
         }
         xSLP.transferFrom(msg.sender, address(this), _amount);
-        if(vTokenAmount % 1e18 != 0) {
-            xSLP.transferFrom(
-                address(this), 
-                msg.sender, 
-                (vTokenAmount % 1e18) * slpSupply / pairBalance
-            );
-        }
     }
 
-    function redeemXSLPToken(
+    function redeemXSLP(
         uint256[] calldata _lpTokenIds
     ) external {
         uint256 length = _lpTokenIds.length;
@@ -244,7 +232,7 @@ contract NFTXNft is ERC721 {
             pair = provider.pairForVaultToken(address(vToken), WETH);    
         }
         uint256 slpSupply = SLP.totalSupply();
-        uint256 pairBalance = vToken.balanceOf(pair);
+        uint256 pairBalance = vToken.balanceOf(address(SLP));
         for(uint256 i = 0; i < length; i++) {
             require(
                 ownerOf(_lpTokenIds[i]) == msg.sender
@@ -252,10 +240,47 @@ contract NFTXNft is ERC721 {
             );
             _burn(_lpTokenIds[i]);
         }
-        xSLP.transferFrom(
-            address(this),
+        xSLP.transfer(
             msg.sender,
-            _lpTokenIds.length * slpSupply / pairBalance
+            (_lpTokenIds.length * 1e18) * slpSupply / pairBalance
         );
+    }
+
+    function getVtoX(uint256 _amount) external view returns(uint256) {
+        uint256 vTokenAmount = 
+            _amount * xToken.totalSupply() / vToken.balanceOf(address(xToken));
+        return vTokenAmount;
+    }
+
+    function getXtoV(uint256 _amount) external view returns(uint256) {
+        uint256 vTokenAmount = 
+            _amount * vToken.balanceOf(address(xToken)) / xToken.totalSupply(); 
+        return vTokenAmount;
+    }
+
+    function getVtoSLP(uint256 _amount) external view returns(uint256) {
+        address pair;
+        if(provider.pairForVaultToken(address(vToken), WETH) == address(0)) {
+            pair = provider.pairForVaultToken(WETH, address(vToken));    
+        } else {
+            pair = provider.pairForVaultToken(address(vToken), WETH);    
+        }
+        uint256 slpSupply = SLP.totalSupply();
+        uint256 pairBalance = vToken.balanceOf(address(SLP));
+        uint256 vTokenAmount = _amount * slpSupply / pairBalance;
+        return vTokenAmount;
+    }
+
+    function getSLPtoV(uint256 _amount) external view returns(uint256) {
+        address pair;
+        if(provider.pairForVaultToken(address(vToken), WETH) == address(0)) {
+            pair = provider.pairForVaultToken(WETH, address(vToken));    
+        } else {
+            pair = provider.pairForVaultToken(address(vToken), WETH);    
+        }
+        uint256 slpSupply = SLP.totalSupply();
+        uint256 pairBalance = vToken.balanceOf(address(SLP));
+        uint256 vTokenAmount = _amount * pairBalance / slpSupply;
+        return vTokenAmount;
     }
 }
