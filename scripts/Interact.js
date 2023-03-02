@@ -29,10 +29,15 @@ async function main() {
     vault = await NFTXVaultUpgradeable.attach("0x5caa4a286ff97ae8ee57aed8b246e72e3f66ea0d");
 
     ERC20Upgradeable = await ethers.getContractFactory("contracts/solidity/token/ERC20Upgradeable.sol:ERC20Upgradeable");
-    vToken = await ERC20Upgradeable.attach("0xdf6c73aed426fb0032e2811a6c7243dfd57e49dd");
-    xToken = await ERC20Upgradeable.attach("0x80afa1e218fe51a1046fe1786d3ae0d5fa00769b");
-    SLP = await ERC20Upgradeable.attach("0x4ea70bf7f00602addd0cf92164e12873acf19aff");
-    xSLP = await ERC20Upgradeable.attach("0xe920941901e57909bcfe44f2f5027bb97353dc2e");
+    vToken = await ERC20Upgradeable.attach("0xee6faf72bed4d1a6f5078734bcc79218160596d4");
+    xToken = await ERC20Upgradeable.attach("0xef82e42ffd40b2148bc9d65ddc0209d15fb53061");
+    SLP = await ERC20Upgradeable.attach("0x0046faa2c46c38cd9064845ead4991c81a113809");
+    xSLP = await ERC20Upgradeable.attach("0x29b5c0ffe629e6f4be8485cd372b3c78200c4900");
+
+    Factory = await ethers.getContractFactory("Factory");
+    // factory = await Factory.deploy(deployer.address);
+    factory = await Factory.attach('0x3daF0788CDB8998cE9dAfA39BEEfeA34287063A5');
+    console.log("Factory:", factory.address);
 
     NFTXNft = await ethers.getContractFactory("NFTXNft");
     // nft = await NFTXNft.deploy(
@@ -46,28 +51,47 @@ async function main() {
     //     SLP.address, // address _SLP
     //     xSLP.address  // address _xSLP
     // );
-    nft = await NFTXNft.attach('0xf666A32d53ef7ee0C480e6Cc80a33E17AE29DB8e');
-    console.log("NFTXNFT:", nft.address);
+    // nft = await NFTXNft.attach('0xf666A32d53ef7ee0C480e6Cc80a33E17AE29DB8e');
 
     //Get addresses: asset address, x, SLP, xSLP
-    console.log("ADDRESSES");
-    let xAddress = await iStaking.vaultXToken(13);
-    console.log("X:", xAddress);
-    let assetAddress = await vault.assetAddress();
-    console.log("AA:", assetAddress);
+    // console.log("ADDRESSES");
+    // let xAddress = await iStaking.vaultXToken(13);
+    // console.log("X:", xAddress);
+    // let assetAddress = await vault.assetAddress();
+    // console.log("AA:", assetAddress);
 
-    console.log("BALANCES");
-    console.log("V:", (await vToken.totalSupply()).toString());
-    console.log("VOX:", (await vToken.balanceOf(xToken.address)).toString());
-    console.log("X:", (await xToken.totalSupply()).toString());
-    console.log("SLP:", (await SLP.totalSupply()).toString());
-    console.log("Deployer balance of SLP:", (await SLP.balanceOf(deployer.address)).toString());
-    console.log("xSLP:", (await xSLP.totalSupply()).toString());
-    console.log("Deployer balance of xSLP:", (await xSLP.balanceOf(deployer.address)).toString());
-    console.log("Deployer balance:", (await vToken.balanceOf(deployer.address)).toString());
-    console.log("Pair balance:", (await vToken.balanceOf('0x4ea70bf7f00602addd0cf92164e12873acf19aff')));
-
+    // console.log("BALANCES");
+    // console.log("V:", (await vToken.totalSupply()).toString());
+    // console.log("VOX:", (await vToken.balanceOf(xToken.address)).toString());
+    // console.log("X:", (await xToken.totalSupply()).toString());
+    // console.log("SLP:", (await SLP.totalSupply()).toString());
+    // console.log("Deployer balance of SLP:", (await SLP.balanceOf(deployer.address)).toString());
+    // console.log("xSLP:", (await xSLP.totalSupply()).toString());
+    // console.log("Deployer balance of xSLP:", (await xSLP.balanceOf(deployer.address)).toString());
+    // console.log("Deployer balance:", (await vToken.balanceOf(deployer.address)).toString());
+    // console.log("Pair balance:", (await vToken.balanceOf('0x4ea70bf7f00602addd0cf92164e12873acf19aff')));
     // console.log(await nft.ownerOf(1));
+
+    //Whitelist creator
+    // const whitelist = await factory.whitelistCreator([deployer.address, '0xE6dC2c1a17b093F4f236Fe8545aCb9D5Ad94334a']);
+    // whitelist.wait();
+    // console.log("Whitelisted creator");
+
+    //Create NFTXNft
+    // const createNFTXNft = await factory.createNFTXNft(
+    //         '0x025bdf730eec33b70afcf63c3fe5bdc916f9aeef', // address _collection,
+    //         '0x6e91A3f27cE6753f47C66B76B03E6A7bFdDB605B', // address _inventoryStaking,
+    //         '0xAfC303423580239653aFB6fb06d37D666ea0f5cA', // address _lpStaking,
+    //         '0x1478bEB5D18B23d2bA90FcEe91d66460AC585e6b', // address _vaultFactory,
+    //         '0x057862b3DB9fDe38d030479FEe43Deb38b04d211', // address _provider,
+    //         vToken.address, // address _vToken,
+    //         xToken.address, // address _xToken,
+    //         SLP.address, // address _SLP
+    //         xSLP.address,  // address _xSLP
+    //         10000
+    // );
+    // createNFTXNft.wait();
+    console.log("NFTXNFT:", await factory.nftxNfts('0x025bdf730eec33b70afcf63c3fe5bdc916f9aeef'));
 
     //Create NFT for vToken
     // const approveV = await vToken.approve(nft.address, '700000000000000000000000');
