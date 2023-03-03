@@ -97,11 +97,11 @@ contract NFTXNft is ERC721 {
     }
 
     function depositVToken(
-        uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
         address vault = address(vToken);
         address NFT = NFTXVaultUpgradeable(vault).assetAddress();
+        uint256 _amount = _lpTokenIds.length * 1e18;
         require(
             NFT == address(collection)
             , "Collections don't match"
@@ -109,10 +109,6 @@ contract NFTXNft is ERC721 {
         require(
             vToken.balanceOf(msg.sender) >= _amount
             , "Insufficient balance"
-        );
-        require(
-            _amount >= _lpTokenIds.length * 1e18
-            , "Not enough tokens"
         );
         for(uint256 i = 0; i < _lpTokenIds.length; i++) {
             require(
@@ -149,13 +145,11 @@ contract NFTXNft is ERC721 {
     }
 
     function depositXToken(
-        uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
         address vault = address(vToken);
         address NFT = NFTXVaultUpgradeable(vault).assetAddress();
-        uint256 vTokenAmount = 
-            _amount * vToken.balanceOf(address(xToken)) / xToken.totalSupply(); 
+        uint256 _amount = _lpTokenIds.length * 1e18 * xToken.totalSupply() / vToken.balanceOf(address(xToken));
         uint256 length = _lpTokenIds.length;
         require(
             NFT == address(collection)
@@ -164,10 +158,6 @@ contract NFTXNft is ERC721 {
         require(
             xToken.balanceOf(msg.sender) >= _amount
             , "Insufficient balance"
-        );
-        require(
-            vTokenAmount >= _lpTokenIds.length * 1e18
-            , "Not enough tokens"
         );
         for(uint256 i = 0; i < length; i++) {
             require(
@@ -203,7 +193,6 @@ contract NFTXNft is ERC721 {
     }
 
     function depositSLP(
-        uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
         address pair;
@@ -214,11 +203,7 @@ contract NFTXNft is ERC721 {
         }
         uint256 slpSupply = SLP.totalSupply();
         uint256 pairBalance = vToken.balanceOf(address(SLP));
-        uint256 vTokenAmount = _amount * pairBalance / slpSupply;
-        require(
-            vTokenAmount >= _lpTokenIds.length
-            , "Underpaying for the amount of LP tokens you're trying to mint"
-        );
+        uint256 _amount = _lpTokenIds.length * 1e18 * slpSupply / pairBalance;
         for(uint256 i = 0; i < _lpTokenIds.length; i++) {
             require(
                 !_exists(_lpTokenIds[i])
@@ -262,7 +247,6 @@ contract NFTXNft is ERC721 {
     }
 
     function depositXSLP(
-        uint256 _amount,
         uint256[] calldata _lpTokenIds
     ) external {
         address pair;
@@ -273,11 +257,7 @@ contract NFTXNft is ERC721 {
         }
         uint256 slpSupply = SLP.totalSupply();
         uint256 pairBalance = vToken.balanceOf(address(SLP));
-        uint256 vTokenAmount = _amount * pairBalance / slpSupply;
-        require(
-            vTokenAmount >= _lpTokenIds.length
-            , "Underpaying for the amount of LP tokens you're trying to mint"
-        );
+        uint256 _amount = _lpTokenIds.length * 1e18 * slpSupply / pairBalance;
         for(uint256 i = 0; i < _lpTokenIds.length; i++) {
             require(
                 !_exists(_lpTokenIds[i])

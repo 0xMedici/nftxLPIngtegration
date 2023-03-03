@@ -29,14 +29,14 @@ async function main() {
     vault = await NFTXVaultUpgradeable.attach("0x5caa4a286ff97ae8ee57aed8b246e72e3f66ea0d");
 
     ERC20Upgradeable = await ethers.getContractFactory("contracts/solidity/token/ERC20Upgradeable.sol:ERC20Upgradeable");
-    vToken = await ERC20Upgradeable.attach("0xee6faf72bed4d1a6f5078734bcc79218160596d4");
-    xToken = await ERC20Upgradeable.attach("0xef82e42ffd40b2148bc9d65ddc0209d15fb53061");
-    SLP = await ERC20Upgradeable.attach("0x0046faa2c46c38cd9064845ead4991c81a113809");
-    xSLP = await ERC20Upgradeable.attach("0x29b5c0ffe629e6f4be8485cd372b3c78200c4900");
+    vToken = await ERC20Upgradeable.attach("0x8be7868a36d24b821aaaf2bd8f1f2dd1509a7aef");
+    xToken = await ERC20Upgradeable.attach("0xbec5e1643dbc329631cb6cd23906ed22598d7d6b");
+    SLP = await ERC20Upgradeable.attach("0x60ee53d26c41009e0eda2adbed4771e78475cee3");
+    xSLP = await ERC20Upgradeable.attach("0x53b410b687e9f1a51dc14c8182571569264dacae");
 
     Factory = await ethers.getContractFactory("Factory");
     // factory = await Factory.deploy(deployer.address);
-    factory = await Factory.attach('0x3daF0788CDB8998cE9dAfA39BEEfeA34287063A5');
+    factory = await Factory.attach('0x6E3BC6973dC9fB6BC46C54a7ef592b7CCc0993A7');
     console.log("Factory:", factory.address);
 
     NFTXNft = await ethers.getContractFactory("NFTXNft");
@@ -73,13 +73,13 @@ async function main() {
     // console.log(await nft.ownerOf(1));
 
     //Whitelist creator
-    // const whitelist = await factory.whitelistCreator([deployer.address, '0xE6dC2c1a17b093F4f236Fe8545aCb9D5Ad94334a']);
-    // whitelist.wait();
-    // console.log("Whitelisted creator");
+    const whitelist = await factory.whitelistCreator([deployer.address, '0xE6dC2c1a17b093F4f236Fe8545aCb9D5Ad94334a']);
+    whitelist.wait();
+    console.log("Whitelisted creator");
 
     //Create NFTXNft
     // const createNFTXNft = await factory.createNFTXNft(
-    //         '0x025bdf730eec33b70afcf63c3fe5bdc916f9aeef', // address _collection,
+    //         '0xf5de760f2e916647fd766b4ad9e85ff943ce3a2b', // address _collection,
     //         '0x6e91A3f27cE6753f47C66B76B03E6A7bFdDB605B', // address _inventoryStaking,
     //         '0xAfC303423580239653aFB6fb06d37D666ea0f5cA', // address _lpStaking,
     //         '0x1478bEB5D18B23d2bA90FcEe91d66460AC585e6b', // address _vaultFactory,
@@ -91,7 +91,7 @@ async function main() {
     //         10000
     // );
     // createNFTXNft.wait();
-    console.log("NFTXNFT:", await factory.nftxNfts('0x025bdf730eec33b70afcf63c3fe5bdc916f9aeef'));
+    // console.log("NFTXNFT:", await factory.nftxNfts('0xf5de760f2e916647fd766b4ad9e85ff943ce3a2b'));
 
     //Create NFT for vToken
     // const approveV = await vToken.approve(nft.address, '700000000000000000000000');
@@ -114,7 +114,6 @@ async function main() {
     // const approveV = await vToken.approve(nft.address, '700000000000000000000000');
     // approveV.wait();
     // const depositXToken = await nft.depositXToken(
-    //     '1030000000000000000', //amount of xToken to deposit
     //     [1] //LP NFT Ids
     // )
     // depositXToken.wait();
@@ -145,7 +144,6 @@ async function main() {
     // const approveSLP = await SLP.approve(nft.address, '700000000000000000000000');
     // approveSLP.wait();
     // const depositSLP = await nft.depositSLP(
-    //     '718515789225627094', //amount
     //     [1] //LP ids
     // );
     // depositSLP.wait();
@@ -160,7 +158,6 @@ async function main() {
     // const approvexSLP = await xSLP.approve(nft.address, '700000000000000000000000');
     // approvexSLP.wait();
     // const depositXSLP = await nft.depositXSLP(
-    //     '719977128942788198', //amount
     //     [1] //LP ids
     // );
     // depositXSLP.wait();
