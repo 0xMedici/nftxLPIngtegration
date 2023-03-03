@@ -36,7 +36,7 @@ async function main() {
 
     Factory = await ethers.getContractFactory("Factory");
     // factory = await Factory.deploy(deployer.address);
-    factory = await Factory.attach('0x6E3BC6973dC9fB6BC46C54a7ef592b7CCc0993A7');
+    factory = await Factory.attach('0x8385a878A445a32Df0ED0a4164B5c63232533293');
     console.log("Factory:", factory.address);
 
     NFTXNft = await ethers.getContractFactory("NFTXNft");
@@ -73,9 +73,9 @@ async function main() {
     // console.log(await nft.ownerOf(1));
 
     //Whitelist creator
-    const whitelist = await factory.whitelistCreator([deployer.address, '0xE6dC2c1a17b093F4f236Fe8545aCb9D5Ad94334a']);
-    whitelist.wait();
-    console.log("Whitelisted creator");
+    // const whitelist = await factory.whitelistCreator([deployer.address, '0xE6dC2c1a17b093F4f236Fe8545aCb9D5Ad94334a']);
+    // whitelist.wait();
+    // console.log("Whitelisted creator");
 
     //Create NFTXNft
     // const createNFTXNft = await factory.createNFTXNft(
@@ -91,7 +91,7 @@ async function main() {
     //         10000
     // );
     // createNFTXNft.wait();
-    // console.log("NFTXNFT:", await factory.nftxNfts('0xf5de760f2e916647fd766b4ad9e85ff943ce3a2b'));
+    console.log("NFTXNFT:", await factory.nftxNfts('0xf5de760f2e916647fd766b4ad9e85ff943ce3a2b'));
 
     //Create NFT for vToken
     // const approveV = await vToken.approve(nft.address, '700000000000000000000000');

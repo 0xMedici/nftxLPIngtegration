@@ -168,6 +168,7 @@ contract NFTXNft is ERC721 {
             idType[_lpTokenIds[i]] = 2;
         }
         xToken.transferFrom(msg.sender, address(this), _amount);
+        emit XTokenDeposited(msg.sender, _amount, _lpTokenIds);
     }
 
     function redeemXToken(
