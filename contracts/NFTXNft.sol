@@ -136,6 +136,7 @@ contract NFTXNft is ERC721 {
                 , "Not your lp token"
             );
             _burn(_lpTokenIds[i]);
+            delete idType[_lpTokenIds[i]];
         }
         vToken.transfer(
             msg.sender,
@@ -185,6 +186,7 @@ contract NFTXNft is ERC721 {
                 , "Not your lp token"
             );
             _burn(_lpTokenIds[i]);
+            delete idType[_lpTokenIds[i]];
         }
         xToken.transfer(
             msg.sender,
@@ -239,6 +241,7 @@ contract NFTXNft is ERC721 {
                 , "Not your lp token"
             );
             _burn(_lpTokenIds[i]);
+            delete idType[_lpTokenIds[i]];
         }
         SLP.transfer(
             msg.sender,
@@ -290,6 +293,7 @@ contract NFTXNft is ERC721 {
                 , "Not your lp token"
             );
             _burn(_lpTokenIds[i]);
+            delete idType[_lpTokenIds[i]];
         }
         xSLP.transfer(
             msg.sender,
