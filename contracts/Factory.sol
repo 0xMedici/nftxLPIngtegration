@@ -7,6 +7,8 @@ import { NFTXVaultFactoryUpgradeable } from "./solidity/NFTXVaultFactoryUpgradea
 import { StakingTokenProvider } from "./solidity/StakingTokenProvider.sol";
 import { NFTXNft } from "./NFTXNft.sol";
 
+import { ERC721 } from "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+
 contract Factory {
 
     address public admin;

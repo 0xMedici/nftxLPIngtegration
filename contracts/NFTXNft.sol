@@ -27,6 +27,7 @@ contract NFTXNft is ERC721 {
     uint256 public maxLPTokens;
 
     mapping(uint256 => uint256) public idType;
+    mapping(uint256 => uint256) public depositAmount;
 
     event VTokenDeposited(
         address indexed user,
@@ -80,10 +81,13 @@ contract NFTXNft is ERC721 {
         address _provider,
         address _vToken,
         address _xToken,
-        address _SLP, 
+        address _SLP,
         address _xSLP,
         uint256 _maxLPTokens
-    ) ERC721(ERC721(_collection).name(), ERC721(_collection).symbol()) {
+    ) ERC721(
+        string(abi.encodePacked(ERC721(_collection).name(), " (nABC)")), 
+        string(abi.encodePacked(ERC721(_collection).symbol(), " (nABC)"))
+    ) {
         collection = ERC721(_collection);
         iStaking = NFTXInventoryStaking(_inventoryStaking);
         lpStaking = NFTXLPStaking(_lpStaking);
@@ -117,6 +121,7 @@ contract NFTXNft is ERC721 {
             );
             _mint(msg.sender, _lpTokenIds[i]);
             idType[_lpTokenIds[i]] = 1;
+            depositAmount[_lpTokenIds[i]] = 1e18;
         }
         vToken.transferFrom(msg.sender, address(this), _amount);
         emit VTokenDeposited(msg.sender, _amount, _lpTokenIds);
@@ -126,6 +131,7 @@ contract NFTXNft is ERC721 {
         uint256[] calldata _lpTokenIds
     ) external {
         uint256 length = _lpTokenIds.length;
+        uint256 amount;
         for(uint256 i = 0; i < length; i++) {
             require(
                 idType[_lpTokenIds[i]] == 1
@@ -135,12 +141,14 @@ contract NFTXNft is ERC721 {
                 ownerOf(_lpTokenIds[i]) == msg.sender
                 , "Not your lp token"
             );
-            _burn(_lpTokenIds[i]);
             delete idType[_lpTokenIds[i]];
+            _burn(_lpTokenIds[i]);
+            amount += depositAmount[_lpTokenIds[i]];
+            delete depositAmount[_lpTokenIds[i]];
         }
         vToken.transfer(
             msg.sender,
-            _lpTokenIds.length * 1e18
+            amount
         );
         emit VTokenRedeemed(msg.sender, _lpTokenIds);
     }
@@ -167,6 +175,7 @@ contract NFTXNft is ERC721 {
             );
             _mint(msg.sender, _lpTokenIds[i]);
             idType[_lpTokenIds[i]] = 2;
+            depositAmount[_lpTokenIds[i]] = 1e18 * xToken.totalSupply() / vToken.balanceOf(address(xToken));
         }
         xToken.transferFrom(msg.sender, address(this), _amount);
         emit XTokenDeposited(msg.sender, _amount, _lpTokenIds);
@@ -176,6 +185,7 @@ contract NFTXNft is ERC721 {
         uint256[] calldata _lpTokenIds
     ) external {
         uint256 length = _lpTokenIds.length;
+        uint256 amount;
         for(uint256 i = 0; i < length; i++) {
             require(
                 idType[_lpTokenIds[i]] == 2
@@ -185,12 +195,14 @@ contract NFTXNft is ERC721 {
                 ownerOf(_lpTokenIds[i]) == msg.sender
                 , "Not your lp token"
             );
-            _burn(_lpTokenIds[i]);
             delete idType[_lpTokenIds[i]];
+            _burn(_lpTokenIds[i]);
+            amount += depositAmount[_lpTokenIds[i]];
+            delete depositAmount[_lpTokenIds[i]];
         }
         xToken.transfer(
             msg.sender,
-            (_lpTokenIds.length * 1e18) * xToken.totalSupply() / vToken.balanceOf(address(xToken))
+            amount
         );
         emit XTokenRedeemed(msg.sender, _lpTokenIds);
     }
@@ -214,6 +226,7 @@ contract NFTXNft is ERC721 {
             );
             _mint(msg.sender, _lpTokenIds[i]);
             idType[_lpTokenIds[i]] = 3;
+            depositAmount[_lpTokenIds[i]] = 1e18 * slpSupply / pairBalance;
         }
         SLP.transferFrom(msg.sender, address(this), _amount);
         emit SLPDeposited(msg.sender, _amount, _lpTokenIds);
@@ -223,14 +236,7 @@ contract NFTXNft is ERC721 {
         uint256[] calldata _lpTokenIds
     ) external {
         uint256 length = _lpTokenIds.length;
-        address pair;
-        if(provider.pairForVaultToken(address(vToken), WETH) == address(0)) {
-            pair = provider.pairForVaultToken(WETH, address(vToken));    
-        } else {
-            pair = provider.pairForVaultToken(address(vToken), WETH);    
-        }
-        uint256 slpSupply = SLP.totalSupply();
-        uint256 pairBalance = vToken.balanceOf(address(SLP));
+        uint256 amount;
         for(uint256 i = 0; i < length; i++) {
             require(
                 idType[_lpTokenIds[i]] == 3
@@ -240,12 +246,14 @@ contract NFTXNft is ERC721 {
                 ownerOf(_lpTokenIds[i]) == msg.sender
                 , "Not your lp token"
             );
-            _burn(_lpTokenIds[i]);
             delete idType[_lpTokenIds[i]];
+            _burn(_lpTokenIds[i]);
+            amount += depositAmount[_lpTokenIds[i]];
+            delete depositAmount[_lpTokenIds[i]];
         }
         SLP.transfer(
             msg.sender,
-            (_lpTokenIds.length * 1e18) * slpSupply / pairBalance
+            amount
         );
         emit SLPRedeemed(msg.sender, _lpTokenIds);
     }
@@ -269,6 +277,7 @@ contract NFTXNft is ERC721 {
             );
             _mint(msg.sender, _lpTokenIds[i]);
             idType[_lpTokenIds[i]] = 4;
+            depositAmount[_lpTokenIds[i]] = 1e18 * slpSupply / pairBalance;
         }
         xSLP.transferFrom(msg.sender, address(this), _amount);
         emit XSLPDeposited(msg.sender, _amount, _lpTokenIds);
@@ -278,26 +287,21 @@ contract NFTXNft is ERC721 {
         uint256[] calldata _lpTokenIds
     ) external {
         uint256 length = _lpTokenIds.length;
-        address pair;
-        if(provider.pairForVaultToken(address(vToken), WETH) == address(0)) {
-            pair = provider.pairForVaultToken(WETH, address(vToken));    
-        } else {
-            pair = provider.pairForVaultToken(address(vToken), WETH);    
-        }
-        uint256 slpSupply = SLP.totalSupply();
-        uint256 pairBalance = vToken.balanceOf(address(SLP));
+        uint256 amount;
         for(uint256 i = 0; i < length; i++) {
             require(idType[_lpTokenIds[i]] == 4, "Not an xSLP token");
             require(
                 ownerOf(_lpTokenIds[i]) == msg.sender
                 , "Not your lp token"
             );
-            _burn(_lpTokenIds[i]);
             delete idType[_lpTokenIds[i]];
+            _burn(_lpTokenIds[i]);
+            amount += depositAmount[_lpTokenIds[i]];
+            delete depositAmount[_lpTokenIds[i]];
         }
         xSLP.transfer(
             msg.sender,
-            (_lpTokenIds.length * 1e18) * slpSupply / pairBalance
+            amount
         );
         emit XSLPRedeemed(msg.sender, _lpTokenIds);
     }
